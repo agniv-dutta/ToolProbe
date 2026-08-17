@@ -9,14 +9,14 @@ interface Props {
 }
 
 const DOCS_COLORS: Record<string, string> = {
-  excellent: "text-green-600 dark:text-green-400",
-  good: "text-green-600 dark:text-green-400",
-  fair: "text-yellow-600 dark:text-yellow-400",
-  poor: "text-orange-600 dark:text-orange-400",
-  none: "text-red-600 dark:text-red-400",
+  excellent: "text-accent",
+  good: "text-accent",
+  fair: "text-warning",
+  poor: "text-amber-600",
+  none: "text-error",
 };
 
-const SEVERITY_COLORS: Record<string, string> = {
+const SEVERITY_BADGE: Record<string, string> = {
   high: "badge-red",
   medium: "badge-yellow",
   low: "badge-blue",
@@ -39,36 +39,34 @@ export function ApiCompleteness({ appId, appName, onClose }: Props) {
   }, [appId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white dark:bg-secondary-900 rounded-2xl shadow-card-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto border border-secondary-200 dark:border-secondary-700 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky top-0 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl border-b border-secondary-200 dark:border-secondary-700 px-8 py-5 flex items-center justify-between rounded-t-2xl z-10">
           <div>
-            <h2 className="text-lg font-semibold">API Completeness</h2>
-            <p className="text-sm text-gray-500">{appName}</p>
+            <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white">API Completeness</h2>
+            <p className="font-serif italic text-sm text-secondary-400">{appName}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
-            ✕
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-all duration-150 text-secondary-500">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-8">
           {loading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
-              <span className="ml-3 text-sm text-gray-500">Evaluating API coverage…</span>
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-7 w-7 border-2 border-primary-500 border-t-transparent" />
+              <span className="ml-4 font-serif italic text-sm text-secondary-500">Evaluating API coverage…</span>
             </div>
           )}
-
           {error && (
-            <div className="text-center py-12 text-red-500 text-sm">
-              <p>{error}</p>
-              <button onClick={onClose} className="mt-2 underline text-xs">Close</button>
+            <div className="text-center py-16">
+              <p className="text-error text-sm">{error}</p>
+              <button onClick={onClose} className="btn-ghost mt-3 text-xs">Close</button>
             </div>
           )}
-
           {data && <CompletenessContent data={data} />}
         </div>
       </div>
@@ -80,63 +78,60 @@ function CompletenessContent({ data }: { data: ApiCompleteness }) {
   return (
     <div className="space-y-6">
       {/* CRUD Coverage + Docs Quality */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="card !py-3 !px-4">
-          <div className="text-[10px] text-gray-500 mb-1">CRUD Coverage</div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="metric-card">
+          <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">CRUD Coverage</div>
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${data.crud_coverage >= 80 ? "bg-green-500" : data.crud_coverage >= 50 ? "bg-yellow-500" : "bg-red-500"}`}
-                style={{ width: `${data.crud_coverage}%` }}
-              />
+            <div className="flex-1 h-3 bg-secondary-200 dark:bg-secondary-700 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-700 ${data.crud_coverage >= 80 ? "bg-gradient-to-r from-accent to-accent-light" : data.crud_coverage >= 50 ? "bg-gradient-to-r from-warning to-amber-400" : "bg-gradient-to-r from-error to-red-400"}`} style={{ width: `${data.crud_coverage}%` }} />
             </div>
-            <span className="text-lg font-bold">{data.crud_coverage}%</span>
+            <span className="font-display text-xl font-semibold text-secondary-900 dark:text-white">{data.crud_coverage}%</span>
           </div>
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-3">
             {(["create", "read", "update", "delete"] as const).map((op) => (
-              <span key={op} className={`text-[10px] px-1.5 py-0.5 rounded ${data.crud_details[op] ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-400 dark:bg-gray-800"}`}>
+              <span key={op} className={`badge text-[10px] ${data.crud_details[op] ? "badge-green" : "badge-gray"}`}>
                 {op.charAt(0).toUpperCase() + op.slice(1)}
               </span>
             ))}
           </div>
         </div>
-        <div className="card !py-3 !px-4">
-          <div className="text-[10px] text-gray-500 mb-1">Docs Quality</div>
-          <div className={`text-lg font-bold ${DOCS_COLORS[data.docs_quality] ?? "text-gray-600"}`}>
+        <div className="metric-card">
+          <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Docs Quality</div>
+          <div className={`font-display text-xl font-semibold ${DOCS_COLORS[data.docs_quality] ?? "text-secondary-600"}`}>
             {data.docs_quality}
           </div>
-          <div className="text-[10px] text-gray-400 mt-1">Versioning: {data.api_versioning}</div>
+          <div className="font-serif italic text-[10px] text-secondary-400 mt-2">Versioning: {data.api_versioning}</div>
         </div>
       </div>
 
       {/* Rate Limits */}
-      <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
-        <div className="flex items-center justify-between mb-1">
-          <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Rate Limits</div>
+      <div className="p-5 rounded-xl bg-primary-50 dark:bg-primary-50/10 border border-primary-200 dark:border-primary-500/20">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-serif italic text-[11px] font-medium text-primary-500 dark:text-primary-light uppercase tracking-wider">Rate Limits</div>
           {data.rate_limits.documented && data.rate_limits.requests_per_minute !== null && (
-            <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+            <span className="font-mono text-sm font-semibold text-primary-500 dark:text-primary-light">
               {data.rate_limits.requests_per_minute} req/min
             </span>
           )}
         </div>
-        <p className="text-sm">{data.rate_limits.details}</p>
+        <p className="text-sm text-secondary-700 dark:text-secondary-300">{data.rate_limits.details}</p>
       </div>
 
       {/* Webhook Support */}
-      <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="text-xs font-medium text-purple-600 dark:text-purple-400">Webhook Support</div>
+      <div className="p-5 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/30">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="font-serif italic text-[11px] font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wider">Webhook Support</div>
           <span className={`badge text-[9px] ${data.webhook_support.supported ? "badge-green" : "badge-red"}`}>
             {data.webhook_support.method}
           </span>
         </div>
-        <p className="text-sm">{data.webhook_support.details}</p>
+        <p className="text-sm text-secondary-700 dark:text-secondary-300">{data.webhook_support.details}</p>
       </div>
 
       {/* SDK Availability */}
       {data.sdk_availability.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">SDK Availability</h3>
+          <h3 className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">SDK Availability</h3>
           <div className="flex flex-wrap gap-2">
             {data.sdk_availability.map((lang) => (
               <span key={lang} className="badge badge-green">{lang}</span>
@@ -148,11 +143,11 @@ function CompletenessContent({ data }: { data: ApiCompleteness }) {
       {/* Paid Features */}
       {data.requires_paid_features.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Features Requiring Paid Plans</h3>
-          <div className="space-y-1.5">
+          <h3 className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Features Requiring Paid Plans</h3>
+          <div className="space-y-2">
             {data.requires_paid_features.map((f, i) => (
               <div key={i} className="flex items-center gap-3 text-sm">
-                <span className="font-medium">{f.feature}</span>
+                <span className="font-medium text-secondary-900 dark:text-white">{f.feature}</span>
                 <span className="badge badge-yellow text-[9px]">{f.required_plan}</span>
               </div>
             ))}
@@ -163,17 +158,15 @@ function CompletenessContent({ data }: { data: ApiCompleteness }) {
       {/* Known Gaps */}
       {data.known_gaps.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Known Gaps</h3>
-          <div className="space-y-1.5">
+          <h3 className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Known Gaps</h3>
+          <div className="space-y-2">
             {data.known_gaps.map((g, i) => (
-              <div key={i} className="flex items-start gap-3 text-sm">
-                <span className={`mt-0.5 badge ${SEVERITY_COLORS[g.severity] ?? "badge-gray"} text-[9px] shrink-0`}>
-                  {g.severity}
-                </span>
-                <div className="flex-1 min-w-0">
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary-50 dark:bg-secondary-800/50">
+                <span className={`badge ${SEVERITY_BADGE[g.severity] ?? "badge-gray"} text-[9px] shrink-0 mt-0.5`}>{g.severity}</span>
+                <div className="flex-1 min-w-0 text-sm text-secondary-700 dark:text-secondary-300">
                   <span>{g.gap}</span>
                   {g.source && (
-                    <a href={g.source} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-500 hover:underline text-[10px]">
+                    <a href={g.source} target="_blank" rel="noopener noreferrer" className="ml-2 text-primary-500 dark:text-primary-light hover:underline text-[10px] font-serif italic">
                       source →
                     </a>
                   )}
@@ -184,10 +177,10 @@ function CompletenessContent({ data }: { data: ApiCompleteness }) {
         </div>
       )}
 
-      {/* Confidence + Sources */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-        <span>Confidence: {(data.confidence * 100).toFixed(0)}%</span>
-        <span>{data.sources.length} source{data.sources.length !== 1 ? "s" : ""}</span>
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-secondary-200 dark:border-secondary-700">
+        <span className="font-serif italic text-xs text-secondary-400">Confidence: {(data.confidence * 100).toFixed(0)}%</span>
+        <span className="font-serif italic text-xs text-secondary-400">{data.sources.length} source{data.sources.length !== 1 ? "s" : ""}</span>
       </div>
     </div>
   );

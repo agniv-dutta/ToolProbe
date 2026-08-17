@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchVerificationChallenge } from "../utils/api";
-import type { VerificationChallenge as VCData } from "../utils/types";
+import type { VerificationChallenge as ChallengeData } from "../utils/types";
 
 interface Props {
   appId: number;
@@ -8,33 +8,23 @@ interface Props {
   onClose: () => void;
 }
 
-const IMPORTANCE_COLORS: Record<string, string> = {
+const CATEGORY_BADGE: Record<string, string> = {
+  critical: "badge-red",
   high: "badge-red",
   medium: "badge-yellow",
   low: "badge-blue",
 };
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  trivial: "text-green-600 dark:text-green-400",
-  easy: "text-green-600 dark:text-green-400",
-  moderate: "text-yellow-600 dark:text-yellow-400",
-  hard: "text-red-600 dark:text-red-400",
-};
-
-const CATEGORY_ICONS: Record<string, string> = {
-  auth: "🔐",
-  pricing: "💰",
-  tech_stack: "⚙️",
-  feature: "✨",
-  access: "🚪",
-  other: "📋",
+const DIFFICULTY_BADGE: Record<string, string> = {
+  easy: "badge-green",
+  moderate: "badge-yellow",
+  hard: "badge-red",
 };
 
 export function VerificationChallenge({ appId, appName, onClose }: Props) {
-  const [data, setData] = useState<VCData | null>(null);
+  const [data, setData] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<number | null>(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,110 +38,127 @@ export function VerificationChallenge({ appId, appName, onClose }: Props) {
   }, [appId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+        className="bg-white dark:bg-secondary-900 rounded-2xl shadow-card-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto border border-secondary-200 dark:border-secondary-700 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky top-0 bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl border-b border-secondary-200 dark:border-secondary-700 px-8 py-5 flex items-center justify-between rounded-t-2xl z-10">
           <div>
-            <h2 className="text-lg font-semibold">Verification Challenge</h2>
-            <p className="text-sm text-gray-500">{appName}</p>
+            <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white">Verification Challenge</h2>
+            <p className="font-serif italic text-sm text-secondary-400">{appName}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
-            ✕
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700 transition-all duration-150 text-secondary-500">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-8">
           {loading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
-              <span className="ml-3 text-sm text-gray-500">Challenge-loading research claims…</span>
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-7 w-7 border-2 border-primary-500 border-t-transparent" />
+              <span className="ml-4 font-serif italic text-sm text-secondary-500">Running verification challenge…</span>
             </div>
           )}
-
           {error && (
-            <div className="text-center py-12 text-red-500 text-sm">
-              <p>{error}</p>
-              <button onClick={onClose} className="mt-2 underline text-xs">Close</button>
+            <div className="text-center py-16">
+              <p className="text-error text-sm">{error}</p>
+              <button onClick={onClose} className="btn-ghost mt-3 text-xs">Close</button>
             </div>
           )}
-
-          {data && <ChallengeContent data={data} expanded={expanded} setExpanded={setExpanded} />}
+          {data && <ChallengeContent data={data} />}
         </div>
       </div>
     </div>
   );
 }
 
-function ChallengeContent({ data, expanded, setExpanded }: { data: VCData; expanded: number | null; setExpanded: (i: number | null) => void }) {
+function ChallengeContent({ data }: { data: ChallengeData }) {
   return (
-    <div className="space-y-4">
-      {data.claims.map((c, i) => {
-        const isOpen = expanded === i;
-        return (
-          <div
-            key={i}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-          >
-            <button
-              onClick={() => setExpanded(isOpen ? null : i)}
-              className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <span className="text-xl shrink-0">{CATEGORY_ICONS[c.category] ?? "📋"}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className={`badge text-[9px] ${IMPORTANCE_COLORS[c.importance] ?? "badge-gray"}`}>
-                    {c.importance}
-                  </span>
-                  <span className="badge badge-gray text-[9px]">{c.category}</span>
-                  <span className={`text-[9px] font-medium ${DIFFICULTY_COLORS[c.difficulty] ?? "text-gray-500"}`}>
-                    {c.difficulty}
-                  </span>
-                </div>
-                <p className="text-sm font-medium truncate">{c.claim}</p>
-              </div>
-              <span className="text-gray-400 text-sm shrink-0">{isOpen ? "▾" : "▸"}</span>
-            </button>
+    <div className="space-y-6">
+      {/* Summary stat */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="metric-card">
+          <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Claims to Verify</div>
+          <div className="font-display text-2xl font-semibold text-primary-500 dark:text-primary-light">{data.claims.length}</div>
+        </div>
+        <div className="metric-card">
+          <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Confidence</div>
+          <div className="font-display text-2xl font-semibold text-secondary-900 dark:text-white">{(data.confidence * 100).toFixed(0)}%</div>
+        </div>
+        <div className="metric-card">
+          <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">Sources</div>
+          <div className="font-display text-2xl font-semibold text-secondary-900 dark:text-white">{data.sources.length}</div>
+        </div>
+      </div>
 
-            {isOpen && (
-              <div className="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-3">
-                {/* Verification Steps */}
-                <div>
-                  <h4 className="text-xs font-medium text-gray-500 mb-2">How to Verify</h4>
-                  <ol className="space-y-1.5">
-                    {c.verification_steps.map((step, j) => (
-                      <li key={j} className="flex items-start gap-2 text-sm">
-                        <span className="text-blue-500 font-mono text-xs mt-0.5 shrink-0">{j + 1}.</span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ol>
+      {/* Claims */}
+      {data.claims.length > 0 && (
+        <div>
+          <h3 className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-3">Claims</h3>
+          <div className="space-y-4">
+            {data.claims.map((cl, idx) => (
+              <div key={idx} className="p-5 rounded-xl bg-secondary-50 dark:bg-secondary-800/50 border border-secondary-200 dark:border-secondary-700">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-secondary-900 dark:text-white">{cl.claim}</div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className={`badge text-[9px] ${CATEGORY_BADGE[cl.category] ?? "badge-gray"}`}>{cl.category}</span>
+                      <span className="font-serif italic text-[10px] text-secondary-400">importance: {cl.importance}</span>
+                    </div>
+                  </div>
+                  <span className={`badge text-[9px] ${DIFFICULTY_BADGE[cl.difficulty] ?? "badge-gray"} shrink-0 ml-3`}>{cl.difficulty}</span>
                 </div>
+
+                {/* Verification steps */}
+                {cl.verification_steps.length > 0 && (
+                  <div className="mb-3">
+                    <div className="font-serif italic text-[10px] font-medium text-secondary-400 uppercase tracking-wider mb-1.5">Verification Steps</div>
+                    <ol className="space-y-1.5">
+                      {cl.verification_steps.map((step, si) => (
+                        <li key={si} className="flex items-start gap-2 text-xs text-secondary-600 dark:text-secondary-400">
+                          <span className="font-mono text-secondary-400 shrink-0 mt-0.5">{si + 1}.</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
 
                 {/* Proof */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                    <div className="text-[10px] font-medium text-green-600 dark:text-green-400 mb-1">Would PROVE</div>
-                    <p className="text-sm">{c.proof_url}</p>
-                    <p className="text-xs text-gray-500 mt-1 italic">{c.proof_screenshot}</p>
+                {cl.proof_url && (
+                  <div className="mb-2">
+                    <div className="font-serif italic text-[10px] font-medium text-secondary-400 uppercase tracking-wider mb-1">Proof URL</div>
+                    <a href={cl.proof_url} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-primary-500 dark:text-primary-light hover:underline break-all">
+                      {cl.proof_url}
+                    </a>
                   </div>
-                  <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                    <div className="text-[10px] font-medium text-red-600 dark:text-red-400 mb-1">Would DISPROVE</div>
-                    <p className="text-sm">{c.disproof}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+                )}
 
-      {/* Confidence + Sources */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-        <span>Confidence: {(data.confidence * 100).toFixed(0)}%</span>
-        <span>{data.sources.length} source{data.sources.length !== 1 ? "s" : ""}</span>
+                {cl.proof_screenshot && (
+                  <div className="mb-2">
+                    <div className="font-serif italic text-[10px] font-medium text-secondary-400 uppercase tracking-wider mb-1">Proof Screenshot</div>
+                    <p className="text-xs text-secondary-600 dark:text-secondary-400">{cl.proof_screenshot}</p>
+                  </div>
+                )}
+
+                {/* Disproof */}
+                {cl.disproof && (
+                  <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30">
+                    <div className="font-serif italic text-[10px] font-medium text-error uppercase tracking-wider mb-1">Disproof</div>
+                    <p className="text-xs text-secondary-700 dark:text-secondary-300">{cl.disproof}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-secondary-200 dark:border-secondary-700">
+        <span className="font-serif italic text-xs text-secondary-400">Confidence: {(data.confidence * 100).toFixed(0)}%</span>
+        <span className="font-serif italic text-xs text-secondary-400">{data.sources.length} source{data.sources.length !== 1 ? "s" : ""}</span>
       </div>
     </div>
   );

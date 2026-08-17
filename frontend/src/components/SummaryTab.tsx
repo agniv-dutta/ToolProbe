@@ -6,7 +6,7 @@ import { ApiCompleteness } from "./ApiCompleteness";
 import { CompetitiveIntel } from "./CompetitiveIntel";
 import { VerificationChallenge } from "./VerificationChallenge";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
+const COLORS = ["#0052CC", "#059669", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
 
 interface Props {
   apps: AppEntry[];
@@ -29,89 +29,96 @@ function MetricsDashboard({ metrics }: { metrics: MetricsData }) {
   const o = metrics.output;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Key Metrics</h2>
-
-      {/* Research Metrics */}
+    <div className="space-y-8">
       <div>
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Research</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <h2 className="font-serif italic text-sm font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-4">
+          Research Metrics
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
           {[
-            { label: "Apps Researched", value: r.apps_completed, sub: `of ${r.apps_total}`, color: "text-blue-600 dark:text-blue-400" },
-            { label: "Failed", value: r.apps_failed, color: "text-red-600 dark:text-red-400" },
-            { label: "Avg Confidence", value: `${(r.avg_confidence * 100).toFixed(0)}%`, color: "text-green-600 dark:text-green-400" },
-            { label: "Low Confidence (<0.7)", value: r.low_confidence_count, color: "text-yellow-600 dark:text-yellow-400" },
-            { label: "Avg Time/App", value: formatSeconds(r.avg_time_per_app), color: "text-purple-600 dark:text-purple-400" },
-            { label: "Total Research Time", value: formatSeconds(r.total_research_time), color: "text-gray-600 dark:text-gray-300" },
+            { label: "Apps Researched", value: r.apps_completed, sub: `of ${r.apps_total}`, color: "text-primary-500 dark:text-primary-light" },
+            { label: "Failed", value: r.apps_failed, color: "text-error" },
+            { label: "Avg Confidence", value: `${(r.avg_confidence * 100).toFixed(0)}%`, color: "text-accent" },
+            { label: "Low Confidence", value: r.low_confidence_count, color: "text-warning" },
+            { label: "Avg Time / App", value: formatSeconds(r.avg_time_per_app), color: "text-purple-500" },
+            { label: "Total Time", value: formatSeconds(r.total_research_time), color: "text-secondary-500" },
           ].map((m) => (
-            <div key={m.label} className="card text-center !py-3 !px-2">
-              <div className={`text-xl font-bold ${m.color}`}>{m.value}</div>
-              {m.sub && <div className="text-[10px] text-gray-400">{m.sub}</div>}
-              <div className="text-[10px] text-gray-500 mt-1 leading-tight">{m.label}</div>
+            <div key={m.label} className="metric-card">
+              <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">
+                {m.label}
+              </div>
+              <div className={`font-display text-2xl font-semibold ${m.color}`}>{m.value}</div>
+              {m.sub && <div className="text-[11px] text-secondary-400 mt-1">{m.sub}</div>}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Accuracy Metrics */}
       <div>
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Accuracy</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <h2 className="font-serif italic text-sm font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-4">
+          Accuracy Metrics
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 stagger-children">
           {[
-            { label: "Spot-Check Sample", value: a.spot_check_total, color: "text-blue-600 dark:text-blue-400" },
-            { label: "Correct", value: a.spot_check_accurate, color: "text-green-600 dark:text-green-400" },
-            { label: "Wrong", value: a.spot_check_inaccurate, color: "text-red-600 dark:text-red-400" },
-            { label: "Accuracy Rate", value: a.overall_accuracy_pct !== null ? `${a.overall_accuracy_pct}%` : "—", color: "text-green-600 dark:text-green-400" },
-            { label: "Auth Accuracy", value: a.auth_method_accuracy_pct !== null ? `${a.auth_method_accuracy_pct}%` : "—", color: "text-purple-600 dark:text-purple-400" },
+            { label: "Spot-Check Sample", value: a.spot_check_total, color: "text-primary-500 dark:text-primary-light" },
+            { label: "Correct", value: a.spot_check_accurate, color: "text-accent" },
+            { label: "Wrong", value: a.spot_check_inaccurate, color: "text-error" },
+            { label: "Accuracy Rate", value: a.overall_accuracy_pct !== null ? `${a.overall_accuracy_pct}%` : "—", color: "text-accent" },
+            { label: "Auth Accuracy", value: a.auth_method_accuracy_pct !== null ? `${a.auth_method_accuracy_pct}%` : "—", color: "text-purple-500" },
           ].map((m) => (
-            <div key={m.label} className="card text-center !py-3 !px-2">
-              <div className={`text-xl font-bold ${m.color}`}>{m.value}</div>
-              <div className="text-[10px] text-gray-500 mt-1 leading-tight">{m.label}</div>
+            <div key={m.label} className="metric-card">
+              <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">
+                {m.label}
+              </div>
+              <div className={`font-display text-2xl font-semibold ${m.color}`}>{m.value}</div>
             </div>
           ))}
         </div>
 
-        {/* Self-Serve vs Gated Detection */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          <div className="card !py-3 !px-4">
-            <div className="text-xs text-gray-500 mb-1">Self-Serve Detection</div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: `${a.self_serve_precision * 100}%` }} />
-              </div>
-              <span className="text-sm font-medium">{(a.self_serve_precision * 100).toFixed(0)}%</span>
+        {/* Detection bars */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <div className="card-flat !p-5">
+            <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-3">
+              Self-Serve Detection
             </div>
-            <div className="text-[10px] text-gray-400 mt-1">precision / recall</div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2.5 bg-secondary-200 dark:bg-secondary-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-500" style={{ width: `${a.self_serve_precision * 100}%` }} />
+              </div>
+              <span className="font-mono text-sm font-medium text-secondary-700 dark:text-secondary-300">{(a.self_serve_precision * 100).toFixed(0)}%</span>
+            </div>
+            <div className="font-serif italic text-[10px] text-secondary-400 mt-2">precision / recall</div>
           </div>
-          <div className="card !py-3 !px-4">
-            <div className="text-xs text-gray-500 mb-1">Gated Detection</div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 rounded-full" style={{ width: `${a.gated_precision * 100}%` }} />
-              </div>
-              <span className="text-sm font-medium">{(a.gated_precision * 100).toFixed(0)}%</span>
+          <div className="card-flat !p-5">
+            <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-3">
+              Gated Detection
             </div>
-            <div className="text-[10px] text-gray-400 mt-1">precision</div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2.5 bg-secondary-200 dark:bg-secondary-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-error to-red-400 rounded-full transition-all duration-500" style={{ width: `${a.gated_precision * 100}%` }} />
+              </div>
+              <span className="font-mono text-sm font-medium text-secondary-700 dark:text-secondary-300">{(a.gated_precision * 100).toFixed(0)}%</span>
+            </div>
+            <div className="font-serif italic text-[10px] text-secondary-400 mt-2">precision</div>
           </div>
         </div>
 
         {/* Accuracy by Category */}
         {Object.keys(a.accuracy_by_category).length > 0 && (
-          <div className="mt-3">
-            <div className="text-xs text-gray-500 mb-2">Accuracy by Category</div>
+          <div className="mt-4">
+            <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">
+              Accuracy by Category
+            </div>
             <div className="flex flex-wrap gap-2">
               {Object.entries(a.accuracy_by_category)
                 .sort(([, a], [, b]) => b.percentage - a.percentage)
                 .map(([cat, data]) => (
-                  <div
-                    key={cat}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50 dark:bg-gray-800 text-xs"
-                  >
-                    <span className="font-medium">{cat}</span>
-                    <span className={`font-bold ${data.percentage >= 80 ? "text-green-600" : data.percentage >= 50 ? "text-yellow-600" : "text-red-600"}`}>
+                  <div key={cat} className="badge bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-300">
+                    <span className="font-medium not-italic">{cat}</span>
+                    <span className={`ml-1 font-mono font-semibold not-italic ${data.percentage >= 80 ? "text-accent" : data.percentage >= 50 ? "text-warning" : "text-error"}`}>
                       {data.percentage}%
                     </span>
-                    <span className="text-gray-400">({data.total})</span>
+                    <span className="ml-1 text-secondary-400 not-italic">({data.total})</span>
                   </div>
                 ))}
             </div>
@@ -121,7 +128,9 @@ function MetricsDashboard({ metrics }: { metrics: MetricsData }) {
 
       {/* Output Metrics */}
       <div>
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Output</h3>
+        <h2 className="font-serif italic text-sm font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-3">
+          Output
+        </h2>
         <div className="flex flex-wrap gap-3">
           {[
             { label: "Categories", value: o.categories_count },
@@ -129,9 +138,9 @@ function MetricsDashboard({ metrics }: { metrics: MetricsData }) {
             { label: "Searchable Table", value: o.searchable_app_table ? "Yes" : "No", ok: o.searchable_app_table },
             { label: "Mobile Responsive", value: o.mobile_responsive ? "Yes" : "No", ok: o.mobile_responsive },
           ].map((m) => (
-            <div key={m.label} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 text-xs">
-              <span className="text-gray-500">{m.label}:</span>
-              <span className={`font-medium ${m.ok === false ? "text-red-500" : m.ok === true ? "text-green-600" : ""}`}>
+            <div key={m.label} className="badge bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-300">
+              <span className="not-italic">{m.label}:</span>
+              <span className={`ml-1 font-mono font-semibold not-italic ${m.ok === false ? "text-error" : m.ok === true ? "text-accent" : ""}`}>
                 {m.value}
               </span>
             </div>
@@ -224,64 +233,56 @@ function ExampleCards({ apps }: { apps: AppEntry[] }) {
 
   return (
     <>
-      <div className="card mt-8">
-        <h2 className="text-lg font-semibold mb-4">Deep Dives</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="card-flat">
+        <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white mb-5">
+          Deep Dives
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
           {examples.map((app) => (
             <div
               key={app.id}
-              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+              className="card-premium !p-5"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">{app.name}</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-display font-semibold text-secondary-900 dark:text-white">{app.name}</h3>
                 <span className="badge badge-blue">{app.category}</span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">
+              <p className="text-sm text-secondary-600 dark:text-secondary-400 mb-3 line-clamp-3 leading-relaxed">
                 {app.research!.summary}
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 mb-4">
                 {(app.research!.tech_stack ?? []).slice(0, 6).map((t) => (
                   <span key={t} className="badge badge-green text-[10px]">
                     {t}
                   </span>
                 ))}
               </div>
-              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                <span>Confidence: {((app.research!.confidence_score ?? 0) * 100).toFixed(0)}%</span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between text-xs text-secondary-500 dark:text-secondary-400 pt-3 border-t border-secondary-100 dark:border-secondary-700">
+                <span className="font-serif italic">
+                  Confidence: {((app.research!.confidence_score ?? 0) * 100).toFixed(0)}%
+                </span>
+                <div className="flex items-center gap-1.5">
                   {app.url && (
                     <a
                       href={app.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
+                      className="btn-ghost !px-2 !py-1 !text-[10px]"
                     >
-                      Visit →
+                      Visit
                     </a>
                   )}
-                  <button
-                    onClick={() => setAuthAppId(app.id)}
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                  >
-                    Auth →
+                  <button onClick={() => setAuthAppId(app.id)} className="btn-ghost !px-2 !py-1 !text-[10px] !text-primary-500 dark:!text-primary-light">
+                    Auth
                   </button>
-                  <button
-                    onClick={() => setApiAppId(app.id)}
-                    className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
-                  >
-                    API →
+                  <button onClick={() => setApiAppId(app.id)} className="btn-ghost !px-2 !py-1 !text-[10px] !text-purple-500">
+                    API
                   </button>
-                  <button
-                    onClick={() => setIntelAppId(app.id)}
-                    className="text-amber-600 dark:text-amber-400 hover:underline font-medium"
-                  >
-                    Intel →
+                  <button onClick={() => setIntelAppId(app.id)} className="btn-ghost !px-2 !py-1 !text-[10px] !text-amber-500">
+                    Intel
                   </button>
-                  <button
-                    onClick={() => setVerifyAppId(app.id)}
-                    className="text-red-600 dark:text-red-400 hover:underline font-medium"
-                  >
-                    Verify →
+                  <button onClick={() => setVerifyAppId(app.id)} className="btn-ghost !px-2 !py-1 !text-[10px] !text-error">
+                    Verify
                   </button>
                 </div>
               </div>
@@ -293,49 +294,22 @@ function ExampleCards({ apps }: { apps: AppEntry[] }) {
       {authAppId !== null && (() => {
         const app = examples.find((a) => a.id === authAppId);
         if (!app) return null;
-        return (
-          <AuthDeepDive
-            appId={authAppId}
-            appName={app.name}
-            onClose={() => setAuthAppId(null)}
-          />
-        );
+        return <AuthDeepDive appId={authAppId} appName={app.name} onClose={() => setAuthAppId(null)} />;
       })()}
-
       {apiAppId !== null && (() => {
         const app = examples.find((a) => a.id === apiAppId);
         if (!app) return null;
-        return (
-          <ApiCompleteness
-            appId={apiAppId}
-            appName={app.name}
-            onClose={() => setApiAppId(null)}
-          />
-        );
+        return <ApiCompleteness appId={apiAppId} appName={app.name} onClose={() => setApiAppId(null)} />;
       })()}
-
       {intelAppId !== null && (() => {
         const app = examples.find((a) => a.id === intelAppId);
         if (!app) return null;
-        return (
-          <CompetitiveIntel
-            appId={intelAppId}
-            appName={app.name}
-            onClose={() => setIntelAppId(null)}
-          />
-        );
+        return <CompetitiveIntel appId={intelAppId} appName={app.name} onClose={() => setIntelAppId(null)} />;
       })()}
-
       {verifyAppId !== null && (() => {
         const app = examples.find((a) => a.id === verifyAppId);
         if (!app) return null;
-        return (
-          <VerificationChallenge
-            appId={verifyAppId}
-            appName={app.name}
-            onClose={() => setVerifyAppId(null)}
-          />
-        );
+        return <VerificationChallenge appId={verifyAppId} appName={app.name} onClose={() => setVerifyAppId(null)} />;
       })()}
     </>
   );
@@ -352,15 +326,17 @@ export function SummaryTab({ apps, analysis, metrics }: Props) {
     })) ?? [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {metrics && <MetricsDashboard metrics={metrics} />}
 
-      <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Research Summary</h2>
-        <ul className="space-y-2">
+      <div className="card-flat">
+        <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white mb-5">
+          Research Summary
+        </h2>
+        <ul className="space-y-3">
           {lines.map((line, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed">
-              <span className="text-blue-500 mt-0.5">•</span>
+            <li key={i} className="flex items-start gap-3 text-sm leading-relaxed text-secondary-700 dark:text-secondary-300">
+              <span className="text-primary-500 dark:text-primary-light mt-0.5 font-mono text-xs">→</span>
               <span>{line}</span>
             </li>
           ))}
@@ -368,28 +344,33 @@ export function SummaryTab({ apps, analysis, metrics }: Props) {
       </div>
 
       {pieData.length > 0 && (
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Authentication Methods</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                dataKey="value"
-                label={({ name, percent }) =>
-                  `${name} (${(percent * 100).toFixed(0)}%)`
-                }
-              >
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="card-flat">
+          <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white mb-2">
+            Authentication Methods
+          </h2>
+          <p className="font-serif italic text-xs text-secondary-400 mb-5">Distribution across all researched apps</p>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label={({ name, percent }) =>
+                    `${name} (${(percent * 100).toFixed(0)}%)`
+                  }
+                >
+                  {pieData.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
 

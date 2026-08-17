@@ -22,96 +22,94 @@ export function VerificationTab({ apps }: Props) {
   const wrong = allVerifications.filter((v) => v.is_accurate === false).length;
   const pending = allVerifications.filter((v) => v.is_accurate === null).length;
   const total = allVerifications.length;
-
   const accuracyRate = total > 0 ? ((accurate / total) * 100).toFixed(1) : "—";
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="space-y-8">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger-children">
         {[
-          { label: "Total Checks", value: total, color: "text-blue-600 dark:text-blue-400" },
-          { label: "Correct", value: accurate, color: "text-green-600 dark:text-green-400" },
-          { label: "Wrong", value: wrong, color: "text-red-600 dark:text-red-400" },
-          { label: "Pending", value: pending, color: "text-yellow-600 dark:text-yellow-400" },
+          { label: "Total Checks", value: total, color: "text-primary-500 dark:text-primary-light" },
+          { label: "Correct", value: accurate, color: "text-accent" },
+          { label: "Wrong", value: wrong, color: "text-error" },
+          { label: "Pending", value: pending, color: "text-warning" },
         ].map((s) => (
-          <div key={s.label} className="card text-center">
-            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+          <div key={s.label} className="metric-card">
+            <div className="font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider mb-2">{s.label}</div>
+            <div className={`font-display text-2xl font-semibold ${s.color}`}>{s.value}</div>
           </div>
         ))}
       </div>
 
+      {/* Accuracy bar */}
       {total > 0 && (
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-3">Accuracy Rate</h2>
+        <div className="card-flat">
+          <h2 className="font-display text-lg font-semibold text-secondary-900 dark:text-white mb-2">Accuracy Rate</h2>
+          <p className="font-serif italic text-xs text-secondary-400 mb-4">Spot-check verification results</p>
           <div className="flex items-center gap-4">
-            <div className="flex-1 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="flex-1 h-3 bg-secondary-200 dark:bg-secondary-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 rounded-full transition-all"
+                className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-700"
                 style={{ width: `${accurate}%` }}
               />
             </div>
-            <span className="text-sm font-medium">{accuracyRate}%</span>
+            <span className="font-mono text-sm font-semibold text-secondary-700 dark:text-secondary-300">{accuracyRate}%</span>
           </div>
         </div>
       )}
 
-      <div className="card !p-0 overflow-hidden">
+      {/* Table */}
+      <div className="card-flat !p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">App</th>
-                <th className="text-left px-4 py-3 font-medium">Claim</th>
-                <th className="text-left px-4 py-3 font-medium">Method</th>
-                <th className="text-left px-4 py-3 font-medium">Evidence</th>
-                <th className="text-left px-4 py-3 font-medium">Result</th>
-                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Date</th>
+            <thead>
+              <tr className="border-b border-secondary-200 dark:border-secondary-700">
+                {["App", "Claim", "Method", "Evidence", "Result", "Date"].map((h) => (
+                  <th
+                    key={h}
+                    className={`text-left px-5 py-3.5 font-serif italic text-[11px] font-medium text-secondary-500 dark:text-secondary-400 uppercase tracking-wider ${h === "Date" ? "hidden md:table-cell" : ""}`}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-secondary-100 dark:divide-secondary-800">
               {allVerifications.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500">
-                    No verification logs yet.
+                  <td colSpan={6} className="text-center py-16">
+                    <div className="w-16 h-16 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-secondary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M9 12l2 2 4-4" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                    </div>
+                    <p className="text-secondary-500 font-serif italic">No verification logs yet.</p>
                   </td>
                 </tr>
               ) : (
                 allVerifications.map((v) => (
-                  <tr
-                    key={v.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{v.appName}</div>
-                      <div className="text-xs text-gray-500">{v.appCategory}</div>
+                  <tr key={v.id} className="hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors duration-150">
+                    <td className="px-5 py-4">
+                      <div className="font-medium text-secondary-900 dark:text-white">{v.appName}</div>
+                      <div className="font-serif italic text-xs text-secondary-400">{v.appCategory}</div>
                     </td>
-                    <td className="px-4 py-3 max-w-xs">
-                      <div className="text-sm line-clamp-2">{v.claim ?? "—"}</div>
+                    <td className="px-5 py-4 max-w-xs">
+                      <div className="text-sm text-secondary-700 dark:text-secondary-300 line-clamp-2">{v.claim ?? "—"}</div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span className="badge badge-blue">{v.method ?? "—"}</span>
                     </td>
-                    <td className="px-4 py-3 max-w-xs">
-                      <div className="text-xs text-gray-500 line-clamp-2">
-                        {v.evidence ?? "—"}
-                      </div>
+                    <td className="px-5 py-4 max-w-xs">
+                      <div className="font-serif italic text-xs text-secondary-400 line-clamp-2">{v.evidence ?? "—"}</div>
                     </td>
-                    <td className="px-4 py-3">
-                      {v.is_accurate === true && (
-                        <span className="badge badge-green">Correct</span>
-                      )}
-                      {v.is_accurate === false && (
-                        <span className="badge badge-red">Wrong</span>
-                      )}
-                      {v.is_accurate === null && (
-                        <span className="badge badge-yellow">Pending</span>
-                      )}
+                    <td className="px-5 py-4">
+                      {v.is_accurate === true && <span className="badge badge-green">Correct</span>}
+                      {v.is_accurate === false && <span className="badge badge-red">Wrong</span>}
+                      {v.is_accurate === null && <span className="badge badge-yellow">Pending</span>}
                     </td>
-                    <td className="px-4 py-3 hidden md:table-cell text-xs text-gray-500">
-                      {v.created_at
-                        ? new Date(v.created_at).toLocaleDateString()
-                        : "—"}
+                    <td className="px-5 py-4 hidden md:table-cell font-serif italic text-xs text-secondary-400">
+                      {v.created_at ? new Date(v.created_at).toLocaleDateString() : "—"}
                     </td>
                   </tr>
                 ))

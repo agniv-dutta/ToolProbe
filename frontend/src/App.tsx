@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchExport, fetchAnalysis, fetchMetrics } from "./utils/api";
 import type { AppEntry, AnalysisData, MetricsData } from "./utils/types";
+import { Layout } from "./components/Layout";
 import { SummaryTab } from "./components/SummaryTab";
 import { AllAppsTab } from "./components/AllAppsTab";
 import { PatternsTab } from "./components/PatternsTab";
@@ -19,8 +20,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") === "dark" ||
-        (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      return (
+        localStorage.getItem("theme") === "dark" ||
+        (!localStorage.getItem("theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      );
     }
     return false;
   });
@@ -42,7 +46,7 @@ export default function App() {
       setApps(appsData);
       setAnalysis(analysisData);
       setMetrics(metricsData);
-    } catch (e) {
+    } catch {
       try {
         const appsData = await fetchExport();
         setApps(appsData);
@@ -59,81 +63,64 @@ export default function App() {
   }, [load]);
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                TP
+    <Layout
+      activeTab={active}
+      onTabChange={(t) => setActive(t as Tab)}
+      onRefresh={load}
+      dark={dark}
+      onToggleDark={() => setDark(!dark)}
+      loading={loading}
+      tabs={TABS}
+    >
+      {loading && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="metric-card">
+                <div className="skeleton h-8 w-20 mx-auto mb-3" />
+                <div className="skeleton h-3 w-24 mx-auto" />
               </div>
-              <h1 className="text-lg font-semibold">ToolProbe</h1>
-              <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">App Research Dashboard</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setDark(!dark)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                aria-label="Toggle dark mode"
-              >
-                {dark ? "☀️" : "🌙"}
-              </button>
-              <button
-                onClick={load}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <nav className="sticky top-16 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto -mb-px">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActive(tab)}
-                className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-                  active === tab
-                    ? "tab-active"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                }`}
-              >
-                {tab}
-              </button>
             ))}
           </div>
+          <div className="card-flat">
+            <div className="skeleton h-6 w-48 mb-4" />
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="skeleton h-4 w-full" />
+              ))}
+            </div>
+          </div>
         </div>
-      </nav>
+      )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-            <span className="ml-3 text-gray-500">Loading data…</span>
+      {error && (
+        <div className="card-flat border-error/30 bg-error/5 text-center py-16 animate-fade-in">
+          <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
           </div>
-        )}
-        {error && (
-          <div className="card border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-center py-12">
-            <p className="text-lg font-medium">{error}</p>
-            <button onClick={load} className="mt-3 text-sm underline hover:no-underline">
-              Retry
-            </button>
-          </div>
-        )}
-        {!loading && !error && (
-          <>
-            {active === "Summary" && <SummaryTab apps={apps} analysis={analysis} metrics={metrics} />}
-            {active === "All Apps" && <AllAppsTab apps={apps} />}
-            {active === "Patterns" && <PatternsTab analysis={analysis} />}
-            {active === "Verification" && <VerificationTab apps={apps} />}
-            {active === "Agent Log" && <AgentLogTab apps={apps} />}
-          </>
-        )}
-      </main>
-    </div>
+          <h3 className="font-display text-lg font-semibold text-secondary-800 dark:text-secondary-200 mb-2">
+            Unable to load data
+          </h3>
+          <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-4">{error}</p>
+          <button onClick={load} className="btn-primary text-xs !px-6 !py-2">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="animate-fade-in">
+          {active === "Summary" && <SummaryTab apps={apps} analysis={analysis} metrics={metrics} />}
+          {active === "All Apps" && <AllAppsTab apps={apps} />}
+          {active === "Patterns" && <PatternsTab analysis={analysis} />}
+          {active === "Verification" && <VerificationTab apps={apps} />}
+          {active === "Agent Log" && <AgentLogTab apps={apps} />}
+        </div>
+      )}
+    </Layout>
   );
 }

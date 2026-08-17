@@ -1,8 +1,14 @@
+from pathlib import Path
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from typing import AsyncGenerator
+from urllib.parse import urlparse, unquote
 
 from backend.config import settings
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class Base(DeclarativeBase):
@@ -11,8 +17,18 @@ class Base(DeclarativeBase):
 
 def _build_url() -> str:
     if settings.DATABASE_URL.startswith("sqlite"):
-        raw = settings.DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
-        return raw
+        parsed = urlparse(settings.DATABASE_URL)
+
+        # SQLite URLs are often configured relative to the repository root.
+        # When the app starts from backend/, resolve those paths against the
+        # project root so the database file is found consistently.
+        if parsed.path and not Path(unquote(parsed.path)).is_absolute():
+            relative_path = Path(unquote(parsed.path.lstrip("/")))
+            db_path = (PROJECT_ROOT / relative_path).resolve()
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            return f"sqlite+aiosqlite:///{db_path.as_posix()}"
+
+        return settings.DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
     return settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
 

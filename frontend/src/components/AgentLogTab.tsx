@@ -16,7 +16,7 @@ function buildLog(apps: AppEntry[]): LogEntry[] {
   const logs: LogEntry[] = [];
 
   logs.push({
-    timestamp: "2025-01-01T00:00:00Z",
+    timestamp: new Date().toISOString(),
     level: "info",
     message: `Loaded ${apps.length} apps for research`,
   });
@@ -28,7 +28,7 @@ function buildLog(apps: AppEntry[]): LogEntry[] {
     logs.push({
       timestamp: app.created_at,
       level: "success",
-      message: `Research completed – confidence ${((app.research?.confidence_score ?? 0) * 100).toFixed(0)}%`,
+      message: `Research completed — confidence ${((app.research?.confidence_score ?? 0) * 100).toFixed(0)}%`,
       appName: app.name,
     });
 
@@ -55,18 +55,31 @@ function buildLog(apps: AppEntry[]): LogEntry[] {
   return logs;
 }
 
-const LEVEL_STYLES: Record<string, string> = {
-  info: "text-blue-600 dark:text-blue-400",
-  warn: "text-yellow-600 dark:text-yellow-400",
-  error: "text-red-600 dark:text-red-400",
-  success: "text-green-600 dark:text-green-400",
-};
-
-const LEVEL_DOT: Record<string, string> = {
-  info: "bg-blue-500",
-  warn: "bg-yellow-500",
-  error: "bg-red-500",
-  success: "bg-green-500",
+const LEVEL_CONFIG: Record<string, { dot: string; text: string; border: string; icon: string }> = {
+  info: {
+    dot: "bg-info",
+    text: "text-info",
+    border: "border-l-info",
+    icon: "ℹ",
+  },
+  warn: {
+    dot: "bg-warning",
+    text: "text-warning",
+    border: "border-l-warning",
+    icon: "⚠",
+  },
+  error: {
+    dot: "bg-error",
+    text: "text-error",
+    border: "border-l-error",
+    icon: "✕",
+  },
+  success: {
+    dot: "bg-accent",
+    text: "text-accent",
+    border: "border-l-accent",
+    icon: "✓",
+  },
 };
 
 export function AgentLogTab({ apps }: Props) {
@@ -76,47 +89,76 @@ export function AgentLogTab({ apps }: Props) {
   const filtered = filter === "all" ? logs : logs.filter((l) => l.level === filter);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-500">Filter:</span>
-        {["all", "info", "success", "warn", "error"].map((f) => (
+    <div className="space-y-6">
+      {/* Filter buttons */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-serif italic text-xs text-secondary-500 dark:text-secondary-400 mr-1">Filter:</span>
+        {["all", "success", "info", "warn", "error"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+            className={`px-4 py-1.5 rounded-full text-xs font-serif italic font-medium transition-all duration-150 ${
               filter === f
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-primary-500 dark:bg-primary-light text-white shadow-card-sm"
+                : "text-secondary-500 dark:text-secondary-400 bg-secondary-100 dark:bg-secondary-800 hover:bg-secondary-200 dark:hover:bg-secondary-700"
             }`}
           >
             {f}
           </button>
         ))}
-        <span className="text-xs text-gray-400 ml-auto">{filtered.length} entries</span>
+        <span className="ml-auto font-mono text-xs text-secondary-400">{filtered.length} entries</span>
       </div>
 
-      <div className="card !p-0 overflow-hidden font-mono text-xs">
-        <div className="max-h-[600px] overflow-y-auto">
+      {/* Timeline */}
+      <div className="card-flat !p-0 overflow-hidden">
+        <div className="max-h-[700px] overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">No log entries.</div>
-          ) : (
-            filtered.map((log, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 px-4 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              >
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${LEVEL_DOT[log.level]}`} />
-                <div className="shrink-0 text-gray-400 w-36">
-                  {new Date(log.timestamp).toLocaleString()}
-                </div>
-                {log.appName && (
-                  <div className="shrink-0 text-gray-600 dark:text-gray-300 w-28 truncate">
-                    [{log.appName}]
-                  </div>
-                )}
-                <div className={`flex-1 ${LEVEL_STYLES[log.level]}`}>{log.message}</div>
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-secondary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 8v4l3 3" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
               </div>
-            ))
+              <p className="font-serif italic text-secondary-500">No log entries.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-secondary-100 dark:divide-secondary-800">
+              {filtered.map((log, i) => {
+                const cfg = LEVEL_CONFIG[log.level];
+                return (
+                  <div
+                    key={i}
+                    className={`relative flex items-start gap-4 px-6 py-4 border-l-[3px] ${cfg.border} hover:bg-secondary-50 dark:hover:bg-secondary-800/50 transition-colors duration-150`}
+                  >
+                    {/* Dot */}
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${cfg.dot}`} />
+
+                    {/* Timestamp */}
+                    <div className="shrink-0 w-36">
+                      <div className="font-serif italic text-[11px] font-medium text-secondary-400 dark:text-secondary-500">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+
+                    {/* App name */}
+                    {log.appName && (
+                      <div className="shrink-0 w-28">
+                        <span className="badge badge-gray text-[10px] truncate block">{log.appName}</span>
+                      </div>
+                    )}
+
+                    {/* Message */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-mono ${cfg.text}`}>{cfg.icon}</span>
+                        <span className="text-sm text-secondary-700 dark:text-secondary-300">{log.message}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
