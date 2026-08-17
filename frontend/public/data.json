@@ -1,0 +1,206 @@
+[
+  {
+    "id": 1,
+    "name": "Notion",
+    "url": "https://notion.so",
+    "category": "productivity",
+    "description": "All-in-one workspace for notes, docs, wikis, and project management",
+    "status": "completed",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:01:00Z",
+    "research": {
+      "summary": "Notion is a versatile productivity platform combining notes, docs, wikis, and project management. It uses a block-based editor with real-time collaboration, supports databases with multiple views, and integrates AI features across the platform.",
+      "tech_stack": ["React", "TypeScript", "Node.js", "PostgreSQL", "Redis", "AWS", "Elasticsearch"],
+      "confidence_score": 0.85,
+      "sources": ["https://notion.so"],
+      "raw_findings": {
+        "name": "Notion",
+        "url": "https://notion.so",
+        "category": "productivity",
+        "summary": "Notion is a versatile productivity platform.",
+        "tech_stack": ["React", "TypeScript", "Node.js", "PostgreSQL", "Redis", "AWS", "Elasticsearch"],
+        "key_features": ["Block editor", "Databases", "Real-time collaboration", "AI assistant", "Templates"],
+        "pricing_model": "freemium",
+        "notable_patterns": "Uses OAuth2 for integrations, API key access for developers, rate limits on API at 3 requests per second"
+      }
+    },
+    "verifications": [
+      {
+        "id": 1,
+        "method": "spot_check",
+        "claim": "Notion uses React, TypeScript, PostgreSQL",
+        "evidence": "Verified via job listings and tech stack analysis",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:02:00Z"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Figma",
+    "url": "https://figma.com",
+    "category": "design",
+    "description": "Collaborative interface design tool",
+    "status": "completed",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:01:00Z",
+    "research": {
+      "summary": "Figma is a cloud-based design tool enabling real-time collaboration on user interfaces. It runs entirely in the browser using WebGL and WebAssembly for high-performance rendering, with a Rust-based compiler for the rendering engine.",
+      "tech_stack": ["TypeScript", "C++", "Rust", "WebGL", "WebAssembly", "AWS", "Google Cloud"],
+      "confidence_score": 0.9,
+      "sources": ["https://figma.com"],
+      "raw_findings": {
+        "name": "Figma",
+        "url": "https://figma.com",
+        "category": "design",
+        "summary": "Cloud-based collaborative design tool.",
+        "tech_stack": ["TypeScript", "C++", "Rust", "WebGL", "WebAssembly", "AWS", "Google Cloud"],
+        "key_features": ["Real-time collaboration", "Component libraries", "Prototyping", "Dev mode", "FigJam"],
+        "pricing_model": "freemium",
+        "notable_patterns": "Uses OAuth2 for integrations, API key access for plugins, no public webhooks, rate limits apply"
+      }
+    },
+    "verifications": [
+      {
+        "id": 2,
+        "method": "spot_check",
+        "claim": "Figma uses WebGL and WebAssembly",
+        "evidence": "Confirmed via engineering blog posts",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:02:00Z"
+      },
+      {
+        "id": 3,
+        "method": "spot_check",
+        "claim": "Figma uses Rust for rendering engine",
+        "evidence": "Confirmed via Figma engineering blog",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:03:00Z"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Slack",
+    "url": "https://slack.com",
+    "category": "communication",
+    "description": "Team messaging and collaboration platform",
+    "status": "completed",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:01:00Z",
+    "research": {
+      "summary": "Slack is a team communication platform offering channels, direct messaging, and integrations with hundreds of services. It provides a robust API and app platform for extending functionality.",
+      "tech_stack": ["Java", "Kotlin", "Go", "React", "Electron", "MySQL", "Kafka", "Redis"],
+      "confidence_score": 0.88,
+      "sources": ["https://slack.com"],
+      "raw_findings": {
+        "name": "Slack",
+        "url": "https://slack.com",
+        "category": "communication",
+        "summary": "Team communication platform with channels and integrations.",
+        "tech_stack": ["Java", "Kotlin", "Go", "React", "Electron", "MySQL", "Kafka", "Redis"],
+        "key_features": ["Channels", "Direct messaging", "App integrations", "Workflow builder", "Huddles"],
+        "pricing_model": "freemium",
+        "notable_patterns": "Uses OAuth2 for app authentication, webhooks for events, API rate limits at tier-based levels, approval required for enterprise features"
+      }
+    },
+    "verifications": [
+      {
+        "id": 4,
+        "method": "spot_check",
+        "claim": "Slack uses Java and Kafka",
+        "evidence": "Verified via engineering documentation",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:02:00Z"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Linear",
+    "url": "https://linear.app",
+    "category": "project_management",
+    "description": "Modern issue tracking for software teams",
+    "status": "completed",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:01:00Z",
+    "research": {
+      "summary": "Linear is a streamlined issue tracking tool focused on speed and keyboard-driven workflows. Built with a modern stack emphasizing real-time sync and opinionated project management.",
+      "tech_stack": ["TypeScript", "React", "GraphQL", "PostgreSQL", "Redis", "Vercel"],
+      "confidence_score": 0.82,
+      "sources": ["https://linear.app"],
+      "raw_findings": {
+        "name": "Linear",
+        "url": "https://linear.app",
+        "category": "project_management",
+        "summary": "Modern issue tracking focused on speed.",
+        "tech_stack": ["TypeScript", "React", "GraphQL", "PostgreSQL", "Redis", "Vercel"],
+        "key_features": ["Keyboard shortcuts", "Cycles", "Roadmaps", "Git integration", "API access"],
+        "pricing_model": "freemium",
+        "notable_patterns": "Uses API key authentication, webhooks available, self-serve sign up with free tier"
+      }
+    },
+    "verifications": [
+      {
+        "id": 5,
+        "method": "spot_check",
+        "claim": "Linear uses GraphQL API",
+        "evidence": "Confirmed via Linear API documentation",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:02:00Z"
+      },
+      {
+        "id": 6,
+        "method": "spot_check",
+        "claim": "Linear uses Vercel for hosting",
+        "evidence": "DNS and deployment analysis confirms Vercel",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:03:00Z"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Supabase",
+    "url": "https://supabase.com",
+    "category": "backend",
+    "description": "Open source Firebase alternative with Postgres",
+    "status": "completed",
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:01:00Z",
+    "research": {
+      "summary": "Supabase is an open-source backend-as-a-service providing a Postgres database, authentication, real-time subscriptions, storage, and edge functions. It positions itself as a Firebase alternative with full SQL capabilities.",
+      "tech_stack": ["TypeScript", "Go", "Elixir", "PostgreSQL", "Kong", "Docker", "Kubernetes"],
+      "confidence_score": 0.92,
+      "sources": ["https://supabase.com"],
+      "raw_findings": {
+        "name": "Supabase",
+        "url": "https://supabase.com",
+        "category": "backend",
+        "summary": "Open-source Firebase alternative with Postgres.",
+        "tech_stack": ["TypeScript", "Go", "Elixir", "PostgreSQL", "Kong", "Docker", "Kubernetes"],
+        "key_features": ["Database", "Auth", "Real-time", "Storage", "Edge Functions", "Vector AI"],
+        "pricing_model": "freemium",
+        "notable_patterns": "Fully open source, self-serve with generous free tier, API key and JWT authentication, webhooks and real-time subscriptions"
+      }
+    },
+    "verifications": [
+      {
+        "id": 7,
+        "method": "spot_check",
+        "claim": "Supabase is open source with Postgres",
+        "evidence": "Confirmed via GitHub repository",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:02:00Z"
+      },
+      {
+        "id": 8,
+        "method": "spot_check",
+        "claim": "Supabase uses Go and Elixir",
+        "evidence": "Verified via source code and job listings",
+        "is_accurate": true,
+        "created_at": "2025-01-01T00:03:00Z"
+      }
+    ]
+  }
+]
