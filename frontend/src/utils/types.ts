@@ -169,3 +169,62 @@ export interface ApiCompleteness {
   confidence: number;
   sources: string[];
 }
+
+// ── LLM Feature Types ─────────────────────────────────────────────────
+
+export interface CategorizeResult {
+  category: string;
+  confidence: number;
+}
+
+export interface BuildabilityScore {
+  score: number;
+  reasoning: string;
+  effort_hours: number;
+}
+
+export interface AppComparison {
+  winner_for_buildability: string;
+  winner_for_easeofuse: string;
+  winner_for_reliability: string;
+  recommendation: string;
+  tradeoffs: string;
+}
+
+export interface GapAnalysis {
+  underserved_categories: string[];
+  missing_popular_apps: string[];
+  emerging_niches: string[];
+  priority_adds: string[];
+}
+
+export interface SmartRecommendation {
+  goal_analysis: string;
+  recommendations: Array<{
+    rank: number;
+    app_name: string;
+    reason: string;
+    integration_effort_hours: number;
+  }>;
+}
+
+export interface DocQuality {
+  completeness: number;
+  clarity: number;
+  examples: number;
+  auth_guide: number;
+  error_handling: number;
+  rate_limits: number;
+  overall_score: number;
+  recommendation: string;
+}
+
+export interface ResearchProgress {
+  total_apps: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  progress_pct: number;
+  avg_confidence: number;
+  estimated_remaining_mins: number;
+}

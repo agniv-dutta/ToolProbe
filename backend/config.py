@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = Field(default="http://localhost:5173,http://localhost:3000", description="Comma-separated CORS origins")
     RESEARCH_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Groq model for research agent")
     VERIFICATION_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Groq model for verification")
+    LLM_MODEL: str = Field(default="llama-3.3-70b-versatile", description="Groq model for LLM features")
+    RESEARCH_BATCH_SIZE: int = Field(default=5, description="Apps per batch")
+    RESEARCH_RATE_LIMIT_DELAY: float = Field(default=0.7, description="Seconds between batches")
+    RESEARCH_MAX_WORKERS: int = Field(default=3, description="Parallel worker count")
 
     model_config = {
         "env_file": ".env",

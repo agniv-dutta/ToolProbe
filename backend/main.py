@@ -1,10 +1,12 @@
+import json
 import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,7 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="ToolProbe – App Research API",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -87,7 +89,7 @@ async def list_apps(
     category: Optional[str] = Query(None),
     status: Optional[AppStatus] = None,
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = select(App)
@@ -245,7 +247,6 @@ async def competitive_intel(app_id: int, db: AsyncSession = Depends(get_db)):
 # ---------------------------------------------------------------------------
 @app.get("/apps/{app_id}/verification-challenge", response_model=VerificationChallengeResponse)
 async def verification_challenge(app_id: int, db: AsyncSession = Depends(get_db)):
-    import json as _json
     from backend.utils.web_search import call_groq_verification_challenge
 
     result = await db.execute(select(App).where(App.id == app_id))
@@ -264,7 +265,7 @@ async def verification_challenge(app_id: int, db: AsyncSession = Depends(get_db)
     if not rr or not rr.raw_findings:
         raise HTTPException(status_code=404, detail="No research results found for this app")
 
-    research_json = _json.dumps(rr.raw_findings, indent=2, default=str)
+    research_json = json.dumps(rr.raw_findings, indent=2, default=str)
 
     data = await call_groq_verification_challenge(
         name=app_obj.name,
@@ -302,6 +303,101 @@ async def trigger_research(app_id: int, db: AsyncSession = Depends(get_db)):
     return rr
 
 
+# ---------------------------------------------------------------------------
+# Distributed Research (batch)
+# ---------------------------------------------------------------------------
+class DistributedResearchRequest(BaseModel):
+    batch_size: int = 5
+    max_workers: int = 3
+
+
+@app.post("/research/distributed")
+async def start_distributed_research(
+    payload: DistributedResearchRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    from backend.services.distributed_researcher import run_distributed_research
+
+    result = await run_distributed_research(
+        db,
+        batch_size=payload.batch_size,
+        max_workers=payload.max_workers,
+        rate_limit_delay=settings.RESEARCH_RATE_LIMIT_DELAY,
+    )
+    return result
+
+
+@app.post("/research/incremental")
+async def start_incremental_research(
+    batch_size: int = Query(10, ge=1, le=50),
+    checkpoint_every: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    from backend.services.distributed_researcher import run_incremental_research
+
+    result = await run_incremental_research(
+        db,
+        batch_size=batch_size,
+        checkpoint_every=checkpoint_every,
+    )
+    return result
+
+
+@app.get("/research/progress")
+async def get_research_progress(db: AsyncSession = Depends(get_db)):
+    from backend.services.distributed_researcher import get_research_progress
+    return await get_research_progress(db)
+
+
+# ---------------------------------------------------------------------------
+# WebSocket – Live Research Progress
+# ---------------------------------------------------------------------------
+@app.websocket("/ws/research-progress")
+async def research_progress_ws(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            async with AsyncSessionLocal() as session:
+                total_stmt = select(func.count(App.id))
+                total = (await session.execute(total_stmt)).scalar_one()
+
+                completed_stmt = select(func.count(App.id)).where(App.status == AppStatus.COMPLETED)
+                completed = (await session.execute(completed_stmt)).scalar_one()
+
+                failed_stmt = select(func.count(App.id)).where(App.status == AppStatus.FAILED)
+                failed = (await session.execute(failed_stmt)).scalar_one()
+
+                avg_conf_stmt = select(func.avg(ResearchResult.confidence_score))
+                avg_confidence = (await session.execute(avg_conf_stmt)).scalar_one() or 0.0
+
+            pending = total - completed - failed
+            progress_pct = (completed / total * 100) if total > 0 else 0
+
+            stats = {
+                "total_apps": total,
+                "completed": completed,
+                "failed": failed,
+                "pending": pending,
+                "progress_pct": round(progress_pct, 1),
+                "avg_confidence": round(float(avg_confidence), 3),
+                "estimated_remaining_mins": round(pending * 2 / 60, 1),
+            }
+            await websocket.send_json(stats)
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        logger.info("WebSocket client disconnected")
+    except Exception as e:
+        logger.error("WebSocket error: %s", e)
+
+
+# Import for websocket
+import asyncio
+from backend.database import AsyncSessionLocal
+
+
+# ---------------------------------------------------------------------------
+# Results
+# ---------------------------------------------------------------------------
 @app.get("/results", response_model=list[ResearchResultRead])
 async def list_results(
     app_id: Optional[int] = Query(None),
@@ -459,3 +555,147 @@ async def analysis_full(db: AsyncSession = Depends(get_db)):
 async def get_metrics(db: AsyncSession = Depends(get_db)):
     from backend.services.metrics_service import compute_metrics
     return await compute_metrics(db)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LLM Features Endpoints
+# ═══════════════════════════════════════════════════════════════════════════
+
+# --- Auto-Categorize ---
+class CategorizeRequest(BaseModel):
+    app_name: str
+    description: str
+
+
+@app.post("/llm/categorize")
+async def auto_categorize(req: CategorizeRequest):
+    from backend.services.llm_features import auto_categorize
+    return await auto_categorize(req.app_name, req.description)
+
+
+# --- Buildability Score ---
+@app.get("/llm/buildability-score/{app_id}")
+async def get_buildability_score(app_id: int, db: AsyncSession = Depends(get_db)):
+    from backend.services.llm_features import score_buildability
+
+    result = await db.execute(select(App).where(App.id == app_id))
+    app_obj = result.scalar_one_or_none()
+    if not app_obj:
+        raise HTTPException(status_code=404, detail="App not found")
+
+    rr_stmt = (
+        select(ResearchResult)
+        .where(ResearchResult.app_id == app_id)
+        .order_by(ResearchResult.created_at.desc())
+        .limit(1)
+    )
+    rr = (await db.execute(rr_stmt)).scalar_one_or_none()
+
+    research_data = rr.raw_findings if rr and rr.raw_findings else {"name": app_obj.name}
+    research_data["app_name"] = app_obj.name
+    research_data["docs_url"] = app_obj.url
+
+    return await score_buildability(research_data)
+
+
+# --- Compare Apps ---
+class CompareRequest(BaseModel):
+    app1_id: int
+    app2_id: int
+
+
+@app.post("/llm/compare")
+async def compare_apps(req: CompareRequest, db: AsyncSession = Depends(get_db)):
+    from backend.services.llm_features import compare_apps
+
+    result1 = await db.execute(select(App).where(App.id == req.app1_id))
+    app1 = result1.scalar_one_or_none()
+    result2 = await db.execute(select(App).where(App.id == req.app2_id))
+    app2 = result2.scalar_one_or_none()
+
+    if not app1 or not app2:
+        raise HTTPException(status_code=404, detail="One or both apps not found")
+
+    async def _get_research(app_id: int) -> dict:
+        rr_stmt = (
+            select(ResearchResult)
+            .where(ResearchResult.app_id == app_id)
+            .order_by(ResearchResult.created_at.desc())
+            .limit(1)
+        )
+        rr = (await db.execute(rr_stmt)).scalar_one_or_none()
+        return rr.raw_findings if rr and rr.raw_findings else {}
+
+    r1 = await _get_research(req.app1_id)
+    r1["name"] = app1.name
+    r2 = await _get_research(req.app2_id)
+    r2["name"] = app2.name
+
+    return await compare_apps(r1, r2)
+
+
+# --- Gap Analysis ---
+@app.get("/llm/gaps")
+async def get_gaps(db: AsyncSession = Depends(get_db)):
+    from backend.services.llm_features import analyze_gaps
+
+    stmt = select(ResearchResult)
+    result = await db.execute(stmt)
+    results = [
+        {
+            "app_id": r.app_id,
+            "raw_findings": r.raw_findings,
+            "summary": r.summary,
+            "tech_stack": r.tech_stack,
+            "confidence_score": r.confidence_score,
+        }
+        for r in result.scalars().all()
+    ]
+
+    if not results:
+        return {"error": "No research data available"}
+
+    return await analyze_gaps(results)
+
+
+# --- Smart Recommendations ---
+class RecommendRequest(BaseModel):
+    goal: str
+
+
+@app.post("/llm/recommend")
+async def get_recommendations(req: RecommendRequest, db: AsyncSession = Depends(get_db)):
+    from backend.services.llm_features import recommend_apps
+
+    stmt = select(App).where(App.status == AppStatus.COMPLETED).limit(50)
+    result = await db.execute(stmt)
+    apps = result.scalars().all()
+
+    app_list = []
+    for a in apps:
+        rr_stmt = (
+            select(ResearchResult)
+            .where(ResearchResult.app_id == a.id)
+            .order_by(ResearchResult.created_at.desc())
+            .limit(1)
+        )
+        rr = (await db.execute(rr_stmt)).scalar_one_or_none()
+        raw = rr.raw_findings if rr and rr.raw_findings else {}
+        raw["name"] = a.name
+        raw["category"] = a.category
+        app_list.append(raw)
+
+    return await recommend_apps(req.goal, app_list)
+
+
+# --- Doc Quality Score ---
+@app.get("/llm/doc-quality/{app_id}")
+async def rate_docs(app_id: int, db: AsyncSession = Depends(get_db)):
+    from backend.services.llm_features import score_doc_quality
+
+    result = await db.execute(select(App).where(App.id == app_id))
+    app_obj = result.scalar_one_or_none()
+    if not app_obj:
+        raise HTTPException(status_code=404, detail="App not found")
+
+    return await score_doc_quality(app_obj.name, app_obj.url)

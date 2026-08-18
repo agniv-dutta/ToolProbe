@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchExport, fetchAnalysis, fetchMetrics } from "./utils/api";
+import { fetchExport, fetchAnalysis, fetchMetrics, fetchApps } from "./utils/api";
 import type { AppEntry, AnalysisData, MetricsData } from "./utils/types";
 import { Layout } from "./components/Layout";
 import { SummaryTab } from "./components/SummaryTab";
@@ -7,8 +7,22 @@ import { AllAppsTab } from "./components/AllAppsTab";
 import { PatternsTab } from "./components/PatternsTab";
 import { VerificationTab } from "./components/VerificationTab";
 import { AgentLogTab } from "./components/AgentLogTab";
+import { SmartRecommendations } from "./components/SmartRecommendations";
+import { AppComparison } from "./components/AppComparison";
+import { GapAnalysis } from "./components/GapAnalysis";
+import { ResearchProgress } from "./components/ResearchProgress";
 
-const TABS = ["Summary", "All Apps", "Patterns", "Verification", "Agent Log"] as const;
+const TABS = [
+  "Summary",
+  "All Apps",
+  "Patterns",
+  "Verification",
+  "Agent Log",
+  "Smart Recs",
+  "Compare",
+  "Gaps",
+  "Progress",
+] as const;
 type Tab = (typeof TABS)[number];
 
 export default function App() {
@@ -31,6 +45,7 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
+    document.documentElement.classList.toggle("light", !dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
 
@@ -38,11 +53,12 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const [appsData, analysisData, metricsData] = await Promise.all([
-        fetchExport(),
+      const [appsRes, analysisData, metricsData] = await Promise.all([
+        fetchApps().catch(() => null),
         fetchAnalysis().catch(() => null),
         fetchMetrics().catch(() => null),
       ]);
+      const appsData = appsRes ? ("items" in appsRes ? appsRes.items : appsRes) : await fetchExport();
       setApps(appsData);
       setAnalysis(analysisData);
       setMetrics(metricsData);
@@ -94,18 +110,18 @@ export default function App() {
       )}
 
       {error && (
-        <div className="card-flat border-error/30 bg-error/5 text-center py-16 animate-fade-in">
-          <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="card-flat text-center py-16 animate-fade-in" style={{ borderColor: "var(--text-error)" }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--bg-error)" }}>
+            <svg className="w-8 h-8" style={{ color: "var(--text-error)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
           </div>
-          <h3 className="font-display text-lg font-semibold text-secondary-800 dark:text-secondary-200 mb-2">
+          <h3 className="font-display text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
             Unable to load data
           </h3>
-          <p className="text-sm text-secondary-500 dark:text-secondary-400 mb-4">{error}</p>
+          <p className="text-sm mb-4" style={{ color: "var(--text-tertiary)" }}>{error}</p>
           <button onClick={load} className="btn-primary text-xs !px-6 !py-2">
             Retry
           </button>
@@ -119,6 +135,10 @@ export default function App() {
           {active === "Patterns" && <PatternsTab analysis={analysis} />}
           {active === "Verification" && <VerificationTab apps={apps} />}
           {active === "Agent Log" && <AgentLogTab apps={apps} />}
+          {active === "Smart Recs" && <SmartRecommendations />}
+          {active === "Compare" && <AppComparison apps={apps} />}
+          {active === "Gaps" && <GapAnalysis />}
+          {active === "Progress" && <ResearchProgress />}
         </div>
       )}
     </Layout>

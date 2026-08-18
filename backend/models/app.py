@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum as SAEnum
+from sqlalchemy import Column, Integer, String, DateTime, Text, Enum as SAEnum, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
@@ -25,9 +25,14 @@ class App(Base):
         SAEnum(AppStatus, values_callable=lambda x: [e.value for e in x]),
         default=AppStatus.PENDING,
         nullable=False,
+        index=True,
     )
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     research_results = relationship("ResearchResult", back_populates="app", cascade="all, delete-orphan")
     verification_logs = relationship("VerificationLog", back_populates="app", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("idx_category_status", "category", "status"),
+    )

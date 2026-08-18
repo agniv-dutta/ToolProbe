@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, JSON, Index
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -14,9 +14,13 @@ class ResearchResult(Base):
     raw_findings = Column(JSON, nullable=True)
     summary = Column(Text, nullable=True)
     tech_stack = Column(JSON, nullable=True)
-    confidence_score = Column(Float, nullable=True)
+    confidence_score = Column(Float, nullable=True, index=True)
     sources = Column(JSON, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
     app = relationship("App", back_populates="research_results")
     verifications = relationship("VerificationLog", back_populates="research_result", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("idx_app_confidence", "app_id", "confidence_score"),
+    )
