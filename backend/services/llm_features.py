@@ -116,17 +116,21 @@ Score Factors:
 Return JSON: {{"score": 75, "reasoning": "...", "effort_hours": 8}}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert buildability analyst. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=200,
-        temperature=0.2,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert buildability analyst. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=200,
+            temperature=0.2,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("score_buildability failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -158,17 +162,21 @@ Return JSON with:
 }}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert app comparison analyst. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=300,
-        temperature=0.2,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert app comparison analyst. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=300,
+            temperature=0.2,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("compare_apps failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -202,17 +210,21 @@ Return JSON:
 }}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert market analyst. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=400,
-        temperature=0.3,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert market analyst. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=400,
+            temperature=0.3,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("analyze_gaps failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -248,17 +260,21 @@ Return JSON:
 }}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert integration consultant. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=500,
-        temperature=0.3,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert integration consultant. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=500,
+            temperature=0.3,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("recommend_apps failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -291,14 +307,18 @@ Return JSON:
 }}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert API documentation reviewer. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=300,
-        temperature=0.2,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert API documentation reviewer. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=300,
+            temperature=0.2,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("score_doc_quality failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")

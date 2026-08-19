@@ -250,6 +250,8 @@ Return a JSON object with exactly these keys:
 
 
 def _get_client() -> AsyncGroq:
+    if not settings.GROQ_API_KEY.strip():
+        raise ValueError("GROQ_API_KEY is not configured. Set it in backend/.env")
     return AsyncGroq(api_key=settings.GROQ_API_KEY)
 
 
