@@ -83,7 +83,7 @@ Return JSON: {{"category": "CATEGORY_NAME", "confidence": 0.95}}"""
                 {"role": "system", "content": "You are an expert app categorizer. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=100,
+            max_tokens=512,
             temperature=0.1,
         )
         text = response.choices[0].message.content
@@ -123,7 +123,7 @@ Return JSON: {{"score": 75, "reasoning": "...", "effort_hours": 8}}"""
                 {"role": "system", "content": "You are an expert buildability analyst. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=200,
+            max_tokens=1024,
             temperature=0.2,
         )
         text = response.choices[0].message.content
@@ -169,7 +169,7 @@ Return JSON with:
                 {"role": "system", "content": "You are an expert app comparison analyst. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=300,
+            max_tokens=1024,
             temperature=0.2,
         )
         text = response.choices[0].message.content
@@ -217,7 +217,7 @@ Return JSON:
                 {"role": "system", "content": "You are an expert market analyst. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=400,
+            max_tokens=1024,
             temperature=0.3,
         )
         text = response.choices[0].message.content
@@ -267,7 +267,7 @@ Return JSON:
                 {"role": "system", "content": "You are an expert integration consultant. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=500,
+            max_tokens=1024,
             temperature=0.3,
         )
         text = response.choices[0].message.content
@@ -314,7 +314,7 @@ Return JSON:
                 {"role": "system", "content": "You are an expert API documentation reviewer. Return valid JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=300,
+            max_tokens=1024,
             temperature=0.2,
         )
         text = response.choices[0].message.content
