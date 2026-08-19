@@ -4,6 +4,25 @@ from typing import Any, Optional
 
 
 # --- App ---
+class AppResearchSummary(BaseModel):
+    summary: Optional[str] = None
+    tech_stack: Optional[list[str]] = None
+    confidence_score: Optional[float] = None
+    sources: Optional[list[str]] = None
+    raw_findings: Optional[dict] = None
+
+
+class AppVerificationSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    method: Optional[str] = None
+    claim: Optional[str] = None
+    evidence: Optional[str] = None
+    is_accurate: Optional[bool] = None
+    created_at: Optional[datetime] = None
+
+
 class AppCreate(BaseModel):
     name: str = Field(..., max_length=255)
     url: Optional[str] = Field(None, max_length=2048)
@@ -22,6 +41,8 @@ class AppRead(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    research: Optional[AppResearchSummary] = None
+    verifications: list[AppVerificationSummary] = Field(default_factory=list)
 
 
 class AppList(BaseModel):

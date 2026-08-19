@@ -8,6 +8,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from sqlalchemy import select
+
 from backend.database import AsyncSessionLocal, init_db
 from backend.models import App, AppStatus
 
@@ -24,7 +26,12 @@ async def seed():
 
     async with AsyncSessionLocal() as db:
         inserted = 0
+        skipped = 0
         for item in apps_data:
+            existing = await db.scalar(select(App).where(App.name == item["name"]))
+            if existing:
+                skipped += 1
+                continue
             app = App(
                 name=item["name"],
                 url=item.get("url"),
@@ -35,7 +42,7 @@ async def seed():
             db.add(app)
             inserted += 1
         await db.commit()
-    logger.info("Seeded %d apps into database", inserted)
+    logger.info("Seeded %d apps into database (%d already existed)", inserted, skipped)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from fastapi import HTTPException
 from groq import AsyncGroq
 
 from backend.config import settings
@@ -15,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 def _get_client() -> AsyncGroq:
+    if not settings.GROQ_API_KEY.strip():
+        raise HTTPException(
+            status_code=503,
+            detail="LLM features are unavailable because GROQ_API_KEY is not configured.",
+        )
     return AsyncGroq(api_key=settings.GROQ_API_KEY)
 
 
@@ -169,6 +175,8 @@ async def analyze_gaps(research_results: list[dict]) -> dict:
     import pandas as pd
 
     df = pd.DataFrame(research_results)
+    if "category" not in df.columns:
+        df["category"] = "unknown"
     category_counts = df.groupby("category").size().to_string() if len(df) > 0 else "No data"
 
     prompt = f"""Given this research across apps:

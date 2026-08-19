@@ -96,15 +96,31 @@ async def run_research(apps: list[dict], output_path: str | None = None) -> list
 
     async with AsyncSessionLocal() as db:
         for i, app_data in enumerate(apps):
-            app = App(
-                name=app_data.get("name", f"App-{i}"),
-                url=app_data.get("url"),
-                category=app_data.get("category"),
-                description=app_data.get("description"),
-                status=AppStatus.RESEARCHING,
+            app_name = app_data.get("name", f"App-{i}")
+            app = await db.scalar(select(App).where(App.name == app_name))
+            if app is None:
+                app = App(
+                    name=app_name,
+                    url=app_data.get("url"),
+                    category=app_data.get("category"),
+                    description=app_data.get("description"),
+                    status=AppStatus.PENDING,
+                )
+                db.add(app)
+                await db.flush()
+
+            latest_result = await db.scalar(
+                select(ResearchResult)
+                .where(ResearchResult.app_id == app.id)
+                .order_by(ResearchResult.created_at.desc())
+                .limit(1)
             )
-            db.add(app)
-            await db.flush()
+            if latest_result is not None:
+                app.status = AppStatus.COMPLETED
+                results.append({"app": app.name, "status": "completed", "data": latest_result.raw_findings})
+                continue
+
+            app.status = AppStatus.RESEARCHING
 
             app_start = time.monotonic()
             data = await _process_app(app, i, len(apps))

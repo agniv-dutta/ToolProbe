@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from groq import APIError
 from pydantic import BaseModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,8 @@ from backend.schemas.schemas import (
     AppCreate,
     AppRead,
     AppList,
+    AppResearchSummary,
+    AppVerificationSummary,
     ResearchResultCreate,
     ResearchResultRead,
     VerificationLogCreate,
@@ -69,6 +72,17 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
+    if isinstance(exc, APIError):
+        logger.error("Groq request failed: %s", exc)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": (
+                    "LLM service unavailable. Check GROQ_API_KEY and RESEARCH_MODEL. "
+                    f"Provider response: {str(exc)}"
+                )
+            },
+        )
     logger.exception("Unhandled exception: %s", exc)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
@@ -76,6 +90,16 @@ async def global_exception_handler(request, exc):
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
+@app.get("/")
+async def root():
+    return {
+        "name": "ToolProbe API",
+        "version": app.version,
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health", response_model=StatusResponse)
 async def health():
     return StatusResponse(status="ok", message="Service is healthy")
@@ -105,7 +129,54 @@ async def list_apps(
     total = (await db.execute(count_stmt)).scalar_one()
     result = await db.execute(stmt.offset(skip).limit(limit))
     items = result.scalars().all()
-    return AppList(items=items, total=total)
+    enriched = []
+    for app_obj in items:
+        latest_result = await db.scalar(
+            select(ResearchResult)
+            .where(ResearchResult.app_id == app_obj.id)
+            .order_by(ResearchResult.created_at.desc())
+            .limit(1)
+        )
+        verification_result = await db.execute(
+            select(VerificationLog)
+            .where(VerificationLog.app_id == app_obj.id)
+            .order_by(VerificationLog.created_at)
+        )
+        enriched.append(
+            AppRead(
+                id=app_obj.id,
+                name=app_obj.name,
+                url=app_obj.url,
+                category=app_obj.category,
+                description=app_obj.description,
+                status=app_obj.status.value,
+                created_at=app_obj.created_at,
+                updated_at=app_obj.updated_at,
+                research=(
+                    AppResearchSummary(
+                        summary=latest_result.summary,
+                        tech_stack=latest_result.tech_stack,
+                        confidence_score=latest_result.confidence_score,
+                        sources=latest_result.sources,
+                        raw_findings=latest_result.raw_findings,
+                    )
+                    if latest_result
+                    else None
+                ),
+                verifications=[
+                    AppVerificationSummary(
+                        id=item.id,
+                        method=item.method,
+                        claim=item.claim,
+                        evidence=item.evidence,
+                        is_accurate=item.is_accurate,
+                        created_at=item.created_at,
+                    )
+                    for item in verification_result.scalars().all()
+                ],
+            )
+        )
+    return AppList(items=enriched, total=total)
 
 
 @app.post("/apps", response_model=AppRead, status_code=201)
@@ -639,18 +710,21 @@ async def compare_apps(req: CompareRequest, db: AsyncSession = Depends(get_db)):
 async def get_gaps(db: AsyncSession = Depends(get_db)):
     from backend.services.llm_features import analyze_gaps
 
-    stmt = select(ResearchResult)
+    stmt = select(ResearchResult, App).join(App, App.id == ResearchResult.app_id)
     result = await db.execute(stmt)
-    results = [
-        {
-            "app_id": r.app_id,
-            "raw_findings": r.raw_findings,
-            "summary": r.summary,
-            "tech_stack": r.tech_stack,
-            "confidence_score": r.confidence_score,
-        }
-        for r in result.scalars().all()
-    ]
+    results = []
+    for research_result, app_obj in result.all():
+        results.append(
+            {
+                "name": app_obj.name,
+                "category": app_obj.category or "unknown",
+                "app_id": research_result.app_id,
+                "raw_findings": research_result.raw_findings,
+                "summary": research_result.summary,
+                "tech_stack": research_result.tech_stack,
+                "confidence_score": research_result.confidence_score,
+            }
+        )
 
     if not results:
         return {"error": "No research data available"}
