@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: toolprobe-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RESEARCH_MODEL
+        value: openai/gpt-oss-120b
+      - key: VERIFICATION_MODEL
+        value: openai/gpt-oss-120b
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,http://localhost:3000
+        # After Vercel deploy, update to:
+        # value: https://your-vercel-app.vercel.app,http://localhost:5173
+      - key: DATABASE_URL
+        value: sqlite:///./research_data/research_db.sqlite
+      - key: LOG_LEVEL
+        value: INFO
