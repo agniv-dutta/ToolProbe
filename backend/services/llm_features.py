@@ -76,17 +76,21 @@ Assign ONE of these categories:
 Return JSON: {{"category": "CATEGORY_NAME", "confidence": 0.95}}"""
 
     client = _get_client()
-    response = await client.chat.completions.create(
-        model=settings.RESEARCH_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an expert app categorizer. Return valid JSON only."},
-            {"role": "user", "content": prompt},
-        ],
-        max_tokens=100,
-        temperature=0.1,
-    )
-    text = response.choices[0].message.content
-    return _parse_json(text)
+    try:
+        response = await client.chat.completions.create(
+            model=settings.RESEARCH_MODEL,
+            messages=[
+                {"role": "system", "content": "You are an expert app categorizer. Return valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=100,
+            temperature=0.1,
+        )
+        text = response.choices[0].message.content
+        return _parse_json(text)
+    except Exception as e:
+        logger.error("auto_categorize failed for %s: %s", app_name, e)
+        raise HTTPException(status_code=502, detail=f"LLM API error: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
