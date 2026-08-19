@@ -1,4 +1,4 @@
-const API = "/api";
+const API = import.meta.env.VITE_API_BASE || "/api";
 
 export async function fetchApps(): Promise<{ items: import("./types").AppEntry[]; total: number }> {
   const res = await fetch(`${API}/apps?limit=500`);
