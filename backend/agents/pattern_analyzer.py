@@ -49,6 +49,50 @@ GATED_KEYWORDS = [
 GATE_LABELS = {"self_serve": "Self-Serve", "gated": "Gated", "unknown": "Unknown"}
 
 
+def _empty_analysis() -> dict:
+    """Return a schema-compatible empty analysis payload."""
+    return {
+        "auth_distribution": {
+            "title": "Authentication Method Distribution",
+            "labels": [],
+            "values": [],
+            "total_apps": 0,
+        },
+        "access_matrix": {
+            "title": "Access Model by Category",
+            "categories": [],
+            "series": {"self_serve": [], "gated": [], "unknown": []},
+        },
+        "top_blockers": {
+            "title": "Top 10 Integration Blockers",
+            "labels": [],
+            "values": [],
+        },
+        "correlations": {
+            "title": "Correlation Analysis",
+            "categorical_correlations": [],
+            "gated_vs_selfserve": {
+                "gated": {"count": 0, "avg_confidence": 0.0, "avg_tech_count": 0.0},
+                "self_serve": {"count": 0, "avg_confidence": 0.0, "avg_tech_count": 0.0},
+                "insight": "No research data available yet.",
+            },
+        },
+        "tech_clusters": {
+            "title": "Technology Clusters",
+            "n_clusters": 0,
+            "clusters": [],
+        },
+        "summary": {
+            "total_apps": 0,
+            "categories": 0,
+            "self_serve_pct": 0.0,
+            "gated_pct": 0.0,
+            "apps_with_blockers": 0,
+            "avg_tech_count": 0.0,
+        },
+    }
+
+
 # ---------------------------------------------------------------------------
 # Feature extraction from raw_findings
 # ---------------------------------------------------------------------------
@@ -261,22 +305,55 @@ def correlation_analysis(df: pd.DataFrame) -> dict:
 # ---------------------------------------------------------------------------
 
 def tech_clusters(df: pd.DataFrame, n_clusters: int = 5) -> dict:
-    if len(df) < n_clusters:
-        n_clusters = max(2, len(df))
+    if len(df) == 0:
+        return {
+            "title": "Technology Clusters",
+            "n_clusters": 0,
+            "clusters": [],
+        }
 
-    mlb = MultiLabelBinarizer()
-    tech_matrix = mlb.fit_transform(df["tech_stack"])
-    feature_names = mlb.classes_
+    if len(df) == 1:
+        row = df.iloc[0]
+        return {
+            "title": "Technology Clusters",
+            "n_clusters": 1,
+            "clusters": [
+                {
+                    "cluster_id": 0,
+                    "size": 1,
+                    "apps": [row["name"]],
+                    "top_techs": list(row["tech_stack"])[:5],
+                    "top_categories": [row["category"]] if row["category"] else [],
+                    "avg_confidence": round(float(row["confidence_score"]), 3),
+                }
+            ],
+        }
 
-    tfidf = TfidfVectorizer(max_features=50, stop_words="english")
-    text_matrix = tfidf.fit_transform(df["combined_text"].fillna(""))
-    text_features = tfidf.get_feature_names_out()
+    n_clusters = min(n_clusters, len(df))
+    if n_clusters < 2:
+        n_clusters = 2
 
-    combined = np.hstack([tech_matrix, text_matrix.toarray()])
+    try:
+        mlb = MultiLabelBinarizer()
+        tech_matrix = mlb.fit_transform(df["tech_stack"])
 
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    df = df.copy()
-    df["cluster"] = kmeans.fit_predict(combined)
+        tfidf = TfidfVectorizer(max_features=50, stop_words="english")
+        text_matrix = tfidf.fit_transform(df["combined_text"].fillna(""))
+
+        combined = np.hstack([tech_matrix, text_matrix.toarray()])
+        if combined.shape[1] == 0:
+            raise ValueError("No clustering features available")
+
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        df = df.copy()
+        df["cluster"] = kmeans.fit_predict(combined)
+    except Exception as exc:
+        logger.warning("Tech clustering skipped: %s", exc)
+        return {
+            "title": "Technology Clusters",
+            "n_clusters": 0,
+            "clusters": [],
+        }
 
     cluster_summaries = []
     for cid in range(n_clusters):
@@ -314,7 +391,7 @@ def tech_clusters(df: pd.DataFrame, n_clusters: int = 5) -> dict:
 def run_full_analysis(apps: list[dict], results: list[dict]) -> dict:
     df = build_dataframe(apps, results)
     if df.empty:
-        return {"error": "No data to analyze", "total_apps": 0}
+        return _empty_analysis()
 
     return {
         "auth_distribution": auth_method_distribution(df),

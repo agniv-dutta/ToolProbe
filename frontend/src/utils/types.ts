@@ -14,7 +14,7 @@ export interface AppEntry {
     sources: string[] | null;
     raw_findings: Record<string, unknown> | null;
   } | null;
-  verifications: VerificationEntry[];
+  verifications?: VerificationEntry[];
 }
 
 export interface VerificationEntry {

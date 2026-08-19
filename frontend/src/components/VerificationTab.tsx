@@ -9,7 +9,7 @@ export function VerificationTab({ apps }: Props) {
   const allVerifications = useMemo(
     () =>
       apps.flatMap((a) =>
-        a.verifications.map((v) => ({
+        (a.verifications ?? []).map((v) => ({
           ...v,
           appName: a.name,
           appCategory: a.category,

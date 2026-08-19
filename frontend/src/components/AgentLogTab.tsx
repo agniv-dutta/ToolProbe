@@ -32,7 +32,7 @@ function buildLog(apps: AppEntry[]): LogEntry[] {
       appName: app.name,
     });
 
-    for (const v of app.verifications) {
+    for (const v of app.verifications ?? []) {
       logs.push({
         timestamp: v.created_at ?? app.created_at,
         level: v.is_accurate === true ? "success" : v.is_accurate === false ? "error" : "warn",

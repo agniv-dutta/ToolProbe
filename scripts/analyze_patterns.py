@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI script to run pattern analysis on completed research results."""
+"""CLI script to run pattern analysis on research results."""
 import asyncio
 import json
 import logging
@@ -22,7 +22,7 @@ OUTPUT = Path(__file__).resolve().parent.parent / "research_data" / "patterns.js
 async def main():
     await init_db()
     async with AsyncSessionLocal() as db:
-        app_stmt = select(App).where(App.status == "completed")
+        app_stmt = select(App)
         apps_raw = (await db.execute(app_stmt)).scalars().all()
 
         rr_stmt = select(ResearchResult)
@@ -37,21 +37,13 @@ async def main():
         for r in rrs_raw
     ]
 
-    if not apps:
-        print("No completed apps found. Run seed_apps.py and run_research.py first.")
-        return
-
-    print(f"Analyzing {len(apps)} apps with {len(results)} research results…\n")
+    print(f"Analyzing {len(apps)} apps with {len(results)} research results...\n")
     analysis = run_full_analysis(apps, results)
-
-    if "error" in analysis:
-        print(f"Error: {analysis['error']}")
-        return
 
     export_analysis(analysis, OUTPUT)
 
     s = analysis["summary"]
-    print("─── Summary ───────────────────────────────────────")
+    print("=== Summary ===")
     print(f"  Total apps:             {s['total_apps']}")
     print(f"  Categories:             {s['categories']}")
     print(f"  Self-serve:             {s['self_serve_pct']}%")
@@ -61,29 +53,29 @@ async def main():
     print()
 
     auth = analysis["auth_distribution"]
-    print("─── Auth Methods ──────────────────────────────────")
+    print("=== Auth Methods ===")
     for label, val in zip(auth["labels"], auth["values"]):
         print(f"  {label:<20} {val}")
     print()
 
     blockers = analysis["top_blockers"]
-    print("─── Top Blockers ──────────────────────────────────")
+    print("=== Top Blockers ===")
     for label, val in zip(blockers["labels"], blockers["values"]):
         print(f"  {label:<25} {val}")
     print()
 
     corr = analysis["correlations"]
     gv = corr["gated_vs_selfserve"]
-    print("─── Gated vs Self-Serve ───────────────────────────")
+    print("=== Gated vs Self-Serve ===")
     print(f"  Gated:     {gv['gated']['count']} apps, avg_conf={gv['gated']['avg_confidence']}, avg_tech={gv['gated']['avg_tech_count']}")
     print(f"  Self-serve:{gv['self_serve']['count']} apps, avg_conf={gv['self_serve']['avg_confidence']}, avg_tech={gv['self_serve']['avg_tech_count']}")
     print(f"  Insight:   {gv['insight']}")
     print()
 
     clusters = analysis["tech_clusters"]
-    print("─── Tech Clusters ─────────────────────────────────")
+    print("=== Tech Clusters ===")
     for cl in clusters["clusters"]:
-        print(f"  Cluster {cl['cluster_id']}: {cl['size']} apps – {', '.join(cl['top_techs'][:4])}")
+        print(f"  Cluster {cl['cluster_id']}: {cl['size']} apps - {', '.join(cl['top_techs'][:4])}")
     print()
 
     print(f"Exported to {OUTPUT}")

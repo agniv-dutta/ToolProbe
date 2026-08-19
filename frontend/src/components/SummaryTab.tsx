@@ -206,7 +206,7 @@ function generateSummary(apps: AppEntry[], analysis: AnalysisData | null): strin
     );
   }
 
-  const verified = apps.flatMap((a) => a.verifications);
+  const verified = apps.flatMap((a) => a.verifications ?? []);
   const accurate = verified.filter((v) => v.is_accurate === true).length;
   const wrong = verified.filter((v) => v.is_accurate === false).length;
   if (verified.length > 0) {

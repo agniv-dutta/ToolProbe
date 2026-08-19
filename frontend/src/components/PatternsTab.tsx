@@ -52,6 +52,25 @@ export function PatternsTab({ analysis }: Props) {
     );
   }
 
+  if (analysis.summary.total_apps === 0) {
+    return (
+      <div className="card-flat text-center py-16">
+        <div className="w-16 h-16 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-secondary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 3v18h18" />
+            <path d="m7 16 4-4 4 4 5-6" />
+          </svg>
+        </div>
+        <h3 className="font-display text-lg font-semibold text-secondary-700 dark:text-secondary-300 mb-2">
+          Analysis is waiting on data
+        </h3>
+        <p className="text-sm text-secondary-500">
+          Seed the database and run research so the charts can populate.
+        </p>
+      </div>
+    );
+  }
+
   const authPie = analysis.auth_distribution.labels.map((l, i) => ({
     name: l,
     value: analysis.auth_distribution.values[i],

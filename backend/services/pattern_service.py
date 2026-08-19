@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 async def analyze_patterns(db: AsyncSession, export_path: str | None = None) -> dict:
-    app_stmt = select(App).where(App.status == "completed")
+    app_stmt = select(App)
     app_result = await db.execute(app_stmt)
     apps = [
         {
@@ -37,8 +37,7 @@ async def analyze_patterns(db: AsyncSession, export_path: str | None = None) -> 
     ]
 
     if not apps or not results:
-        logger.warning("No completed apps or results found for analysis")
-        return {"error": "No data to analyze", "total_apps": 0}
+        logger.warning("No apps or results found for analysis; returning empty analysis payload")
 
     analysis = run_full_analysis(apps, results)
 
